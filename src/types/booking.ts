@@ -56,6 +56,7 @@ export interface Booking {
     expected_on?: number; // UNIX timestamp (reliable date accross time zones)
 
     date: number; // UNIX timestamp (reliable date accross time zones)
+    deadline: number; // UNIX timestamp (reliable date accross time zones)
     address: Address;
     contact: Contact;
     note: string // additional free text note for end event (date/address/contact ..)
@@ -79,6 +80,7 @@ export interface Booking {
   // LEGACY field, will disappear with the chat/message feature, 
   // additional free text note, can be used as "agent note" field
   note: string 
+  deliveryOption: DeliveryOption
 }
 
 enum BookingKind {
@@ -97,10 +99,12 @@ enum BookingKind {
 
 // this needs to be completed and may vary according to the BookingType
 enum Status {
+  NEW, // when when booking hasn't been accepted yet
   PENDING, // when booking hasn't been allocated yet
-  ACCEPTED, // when booking is accepted
-  IN_PROGRESS, // when load has been received, or picked up
-  COMPLETED // has been delivered / picked up ...
+  ACCEPTED, // when booking is accepted (to be scheduled)
+  SCHEDULED, // when expected start and end dates have been filld in
+  IN_PROGRESS, // when load has been received, or picked up / When start date has been filled in
+  COMPLETED // has been delivered / picked up ... / When end date has been filled in
 }
 
 enum Currency {
@@ -123,6 +127,11 @@ export interface Load {
 
   // total weight
   weight: Weight;
+
+  // dimensions of the crate(s)
+  crate_length: Dimension
+  crate_height: Dimension
+  crate_width: Dimension
 
   // total number of crates / packets / parts
   // so in the case of the original item, automatically derived from the Items information
@@ -169,11 +178,15 @@ export interface File {
   url: string
 }
 
+enum DeliveryOption {
+  Curbside,
+  White_glove,
+}
 export interface Item {
   description: string;
   packing: Packing;
   commercialValue: Price;
-  dimensions: Dimension[];
+  dimensions: Details[];
   quantity: number;
 }
 
@@ -182,10 +195,10 @@ enum Packing {
   NOT_PACKED
 }
 
-export interface Dimension {
-  length: number;
-  height: number;
-  width: number;
+export interface Details {
+  length: Dimension;
+  height: Dimension;
+  width: Dimension;
   quantity: number;
   weight: Weight;
   description: string;
@@ -199,4 +212,14 @@ enum WeightMetric {
 export interface Weight {
   value: number;
   unit: WeightMetric;
+}
+
+enum DimensionMetric {
+  Cm,
+  In
+}
+
+export interface Dimension {
+  value: number;
+  unit: DimensionMetric;
 }
