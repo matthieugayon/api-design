@@ -95,8 +95,12 @@ enum BookingKind {
   LAST_MILE_DELIVERY
 }
 
+// this needs to be completed and may vary according to the BookingType
 enum Status {
-  ACCEPTED
+  PENDING, // when booking hasn't been allocated yet
+  ACCEPTED, // when booking is accepted
+  IN_PROGRESS, // when load has been received, or picked up
+  COMPLETED // has been delivered / picked up ...
 }
 
 enum Currency {
