@@ -5,6 +5,7 @@
 export interface Booking {
   id: string; // Supplio id
   booking_id: string; // SF or Opsio id,
+  order_id: string; // OPSIO Order id
 
   // type of the booking
   // see BookingKind enum to see all the different possible booking types
@@ -25,41 +26,42 @@ export interface Booking {
   // Having an history for the booking could also solve this problem
 
   // original load as coming from Opsio
-  order_load: Load;
+  booking_load: Load;
 
   // load edited by the Craters (Optional, only set during the Crating)
-  crate_load?: Load;
+  pack_load?: Load;
 
   /* ---- */
 
   // details of the start of a booking
   // Ex: PU info for Pickup booking type
   start: {
-    // read only
+    // read only, date entered when booking has started ( => IN_PROGRESS )
     date: number; // UNIX timestamp (reliable date accross time zones)
 
-    // (Optional) could be used to possibly notify the previous supplier about a availability
-    // we need to explore this topic more thoroughly
-    ready_on?: number; // UNIX timestamp (reliable date accross time zones)
+    // expected start date as edited by the supplier
+    expected_on: number; // UNIX timestamp (reliable date accross time zones)
 
-    expected_on: number;
     address: Address;
     contact: Contact;
-    note: string // additional free text note for start event (date/address/contact ..)
   }
 
   // details of the end of a booking
   // Ex: DO info for Pickup booking type
   end: {
-    // (Optional) could be used to possibly notify the next supplier about expected job end
-    // we need to explore this topic more thoroughly
-    expected_on?: number; // UNIX timestamp (reliable date accross time zones)
-
+    // read only, date entered when booking has ended ( => COMPLETED )
     date: number; // UNIX timestamp (reliable date accross time zones)
+
+    // expected start date as edited by the supplier
+    // Let's see if it works with bokking CRATING
+    // because we need a way to precise when the action of crating is being done
+    expected_on: number; // UNIX timestamp (reliable date accross time zones)
+
+    // special to DELIVERY_LAST_MILE
     deadline: number; // UNIX timestamp (reliable date accross time zones)
+
     address: Address;
     contact: Contact;
-    note: string // additional free text note for end event (date/address/contact ..)
   }
 
   // UNIX timestamp (reliable date accross tile zones)
@@ -79,8 +81,12 @@ export interface Booking {
 
   // LEGACY field, will disappear with the chat/message feature, 
   // additional free text note, can be used as "agent note" field
-  note: string 
-  deliveryOption: DeliveryOption
+  note: string;
+
+  created_on: number; // UNIX timestamp (reliable date accross time zones)
+
+  // special to DELIVERY_LAST_MILE
+  // deliveryOption: DeliveryOption
 }
 
 enum BookingKind {
@@ -119,6 +125,9 @@ export interface Price {
 }
 
 export interface Load {
+  // for the booking load , ready for collection date
+  ready_on?: number; // UNIX timestamp (reliable date accross time zones)
+
   items: Item[];
 
   // total volume in cubic meter or cubic centimeter ? 
@@ -192,9 +201,9 @@ enum Packing {
 }
 
 export interface Details {
-  length: Dimension;
-  height: Dimension;
-  width: Dimension;
+  length: number;
+  height: number;
+  width: number;
   quantity: number;
   weight: Weight;
   description: string;
@@ -208,14 +217,4 @@ enum WeightMetric {
 export interface Weight {
   value: number;
   unit: WeightMetric;
-}
-
-enum DimensionMetric {
-  Cm,
-  In
-}
-
-export interface Dimension {
-  value: number;
-  unit: DimensionMetric;
 }
