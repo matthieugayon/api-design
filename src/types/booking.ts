@@ -105,8 +105,8 @@ enum BookingKind {
 
 // this needs to be completed and may vary according to the BookingType
 enum Status {
-  NEW, // when when booking hasn't been accepted yet
-  PENDING, // when booking hasn't been allocated yet
+  PENDING, // booking allocated but not accepted by the supplier, budget is fixed by the referrer
+  BUDGET_PROPOSAL_SUPPLIER, // booking not accepted, budget proposal by the supplier
   ACCEPTED, // when booking is accepted (to be scheduled)
   SCHEDULED, // when expected start and end dates have been filld in
   IN_PROGRESS, // when load has been received, or picked up / When start date has been filled in
