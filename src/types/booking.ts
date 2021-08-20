@@ -128,11 +128,6 @@ export interface Load {
   // total weight
   weight: Weight;
 
-  // dimensions of the crate(s)
-  crate_length: Dimension
-  crate_height: Dimension
-  crate_width: Dimension
-
   // total number of crates / packets / parts
   // so in the case of the original item, automatically derived from the Items information
   parts_number: number;
@@ -182,6 +177,7 @@ enum DeliveryOption {
   Curbside,
   White_glove,
 }
+
 export interface Item {
   description: string;
   packing: Packing;
