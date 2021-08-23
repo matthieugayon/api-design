@@ -1,92 +1,236 @@
-// Here is a quick description of the obkect we would receive when we fetch an order
-// with some additionnal comments
-// this may not reflect how exactly we persist the data
+/**
+ * GET /booking response body
+ */
 
 export interface Booking {
-  id: string; // Supplio id
-  booking_id: string; // SF or Opsio id,
+  /**
+   * SUPPLIO_ID
+   * read only
+   */
+  id: string; 
+
+  /**
+   * EXTERNAL_ID
+   * read only
+   * 
+   * could be used to ref SF booking ID
+   */
+  external_id: string; 
+
+  /**
+   * ORDER_ID
+   * read only
+   * 
+   * Opsio's order id
+   */
   order_id: string; // OPSIO Order id
 
-  // type of the booking
-  // see BookingKind enum to see all the different possible booking types
+  /**
+   * BOOKING_TYPE
+   * read only
+   * 
+   * see BookingKind enum to see all the different possible booking types
+   */
   type: BookingKind;
   
-  // status of the booking
-  // see status enum to see all the different possible statuses
+  /**
+   * STATUS
+   * Read-only !!
+   * 
+   * See status enum to see all the different possible statuses
+   */
   status: Status;
   
+  /**
+   * BUDGET
+   * Can be updated by suppliers 
+   * 
+   * Budget of the booking
+   * if updated come from suppliers, status => BUDGET_REQUEST
+   * when booking accepted, status => ACCEPTED
+   */
   budget: Price; 
 
-  /* LOADS */
-
-  // there could be different ideas here
-  // either we have two separated loads info, one from opsio and one from the craters
-  // or we only have one, and this is representing the current state of the load
-  // which may change after the crating
-  // Having an history for the booking could also solve this problem
-
-  // original load as coming from Opsio
+  /**
+   * BOOKING_LOAD
+   * Read-only !!
+   * 
+   * original load as coming from Opsio, can only be modified from OPSIO
+   */
   booking_load: Load;
 
-  // load edited by the Craters (Optional, only set during the Crating)
+  /**
+   * PACK_LOAD
+   * Can be updated by suppliers, only if booking type is CRATING
+   * (could other booking types change the packing ? Grouping ?)
+   * 
+   * Pack load after possible crating transformation
+   */
   pack_load?: Load;
 
-  /* ---- */
-
-  // details of the start of a booking
-  // Ex: PU info for Pickup booking type
+  /**
+   * START object
+   * details of the start of a booking
+   */
   start: {
-    // read only, date entered when booking has started ( => IN_PROGRESS )
-    date: number; // UNIX timestamp (reliable date accross time zones)
 
-    // expected start date as edited by the supplier
-    expected_on: number; // UNIX timestamp (reliable date accross time zones)
+    /**
+     * DATE
+     * Can be updated by suppliers, only when status = START_SCHEDULED
+     * 
+     * date entered when booking has started, status => STARTED
+     */
+    date: number; // UNIX timestamp
 
+    /**
+     * EXPECTED_ON
+     * Can be updated by suppliers, only when status < START_SCHEDULED
+     * 
+     * expected start date, used to notify next suppliers and the various contacts
+     * involved in the booking, status => START_SCHEDULED 
+     */
+    expected_on: number; // UNIX timestamp
+
+    /**
+     * ADDRESS
+     * Read only !! (Marc: why ?)
+     * 
+     * Address of the start of the job
+     * Also holds an optional info field which can be used to add notes about the address
+     */
     address: Address;
+
+    /**
+     * CONTACT
+     * Read only !! (Marc: why ?)
+     * 
+     * Contact of the start of the job
+     */
     contact: Contact;
   }
 
-  // details of the end of a booking
-  // Ex: DO info for Pickup booking type
+  /**
+   * START object
+   * details of the end of a booking
+   */
   end: {
-    // read only, date entered when booking has ended ( => COMPLETED )
-    date: number; // UNIX timestamp (reliable date accross time zones)
 
-    // expected start date as edited by the supplier
-    // Let's see if it works with bokking CRATING
-    // because we need a way to precise when the action of crating is being done
-    expected_on: number; // UNIX timestamp (reliable date accross time zones)
+    /**
+     * DATE
+     * Can be updated by suppliers, only when status = END_SCHEDULED
+     * 
+     * date entered when booking has ended, status => COMPLETED
+     */
+    date: number; // UNIX timestamp
 
-    // special to DELIVERY_LAST_MILE
-    deadline: number; // UNIX timestamp (reliable date accross time zones)
+    /**
+     * EXPECTED_ON
+     * Can be updated by suppliers, only when status > ACCEPTED && status < END_SCHEDULED
+     * 
+     * expected end date, used to notify next suppliers and the various contacts
+     * involved in the booking
+     * if status = IN_PROGRESS  => END_SCHEDULED 
+     */
+    expected_on: number; // UNIX timestamp
 
+    /**
+     * ADDRESS
+     * Read only !! (Marc: why ?)
+     * 
+     * Address of the end of the job
+     * Also holds an optional info field which can be used to add notes about the address
+     */
     address: Address;
+
+    /**
+     * CONTACT
+     * Read only !! (Marc: why ?)
+     * 
+     * Contact of the end of the job
+     */
     contact: Contact;
   }
 
-  // UNIX timestamp (reliable date accross tile zones)
-  // ready for collection date
-  // I am not sure we need it, as the end date could serve the same purpose
-  // we need to have a discussion on the dates, whether or not we could get rid of all the dates
-  // and do everything with start & end
-  // I'll leave it commented for the moment
-  // ready_on: number; 
+  /**
+   * OPTIONS
+   * Read only !!
+   * 
+   * Optional, holds various booking options set by opsio or SF
+   * used for special types of bookings like DELIVERY_LAST_MILE or PICKUP
+   */
+  options?: {
+
+     /**
+     * READY_ON
+     * Read only !!
+     * 
+     * When the load is ready, can be used as ready for collection date
+     */
+    ready_on?: number; // UNIX timestamp
+    
+    /**
+     * DEADLINE
+     * Read only !!
+     * 
+     * Deadline of the booking
+     */
+    deadline: number; // UNIX timestamp
+
+    /**
+     * DELIVERY
+     * Read only !!
+     * 
+     * Delivery options
+     */
+    delivery?: DeliveryOption 
+  }
 
   // can be opsio contact
   // but potentially any king of authority for that booking
+
+  /**
+   * REFERRER
+   * Read only !!
+   * 
+   * The referrer contact fo the booking
+   * Ops contact of the booking
+   */
   referrer: Contact 
 
-  // booking documents
+  /**
+   * REFERRER
+   * Can be updated by suppliers at any time
+   * 
+   * Booking associated files
+   */
   files: File[]; 
 
-  // LEGACY field, will disappear with the chat/message feature, 
-  // additional free text note, can be used as "agent note" field
+  /**
+   * Note
+   * Can be updated by suppliers at any time
+   * 
+   * Additional free text note
+   * Can be used as "agent notes" field
+   * will likely be deprecated once the supplio message/chat feature is ready
+   * but could be also used as a special general note about the booking
+   */
   note: string;
 
-  created_on: number; // UNIX timestamp (reliable date accross time zones)
+  /**
+   * CREATED_ON
+   * Read only !!
+   * 
+   * Creation date
+   */
+  created_on: number; // UNIX timestamp
 
-  // special to DELIVERY_LAST_MILE
-  // deliveryOption: DeliveryOption
+  /**
+   * UPDATED_ON
+   * Read only !!
+   * 
+   * Last update date
+   */
+   updated_on: number; // UNIX timestamp
 }
 
 enum BookingKind {
@@ -106,28 +250,15 @@ enum BookingKind {
 // this needs to be completed and may vary according to the BookingType
 enum Status {
   PENDING, // booking allocated but not accepted by the supplier, budget is fixed by the referrer
-  BUDGET_PROPOSAL_SUPPLIER, // booking not accepted, budget proposal by the supplier
+  BUDGET_REQUEST, // booking not accepted, budget proposal by the supplier or opsio
   ACCEPTED, // when booking is accepted (to be scheduled)
-  SCHEDULED, // when expected start and end dates have been filld in
-  IN_PROGRESS, // when load has been received, or picked up / When start date has been filled in
+  START_SCHEDULED, // when expected start date has been set
+  IN_PROGRESS, // when job start date has been set
+  END_SCHEDULED, // when expected start AND/OR end dates have been filld in
   COMPLETED // has been delivered / picked up ... / When end date has been filled in
 }
 
-enum Currency {
-  EUR,
-  USD,
-  GBP
-}
-
-export interface Price {
-  value: number;
-  currency: Currency;
-}
-
 export interface Load {
-  // for the booking load , ready for collection date
-  ready_on?: number; // UNIX timestamp (reliable date accross time zones)
-
   items: Item[];
 
   // total volume in cubic meter or cubic centimeter ? 
@@ -140,6 +271,34 @@ export interface Load {
   // total number of crates / packets / parts
   // so in the case of the original item, automatically derived from the Items information
   parts_number: number;
+
+  // options field for specializing bookings, Optional
+  options?: LoadOptions
+}
+
+export interface LoadOptions {
+  ready_on?: number; // UNIX timestamp
+  delivery?: DeliveryOption 
+}
+
+
+
+/* SUB TYPES */
+
+enum DeliveryOption {
+  Curbside,
+  White_glove,
+}
+
+enum Currency {
+  EUR,
+  USD,
+  GBP
+}
+
+export interface Price {
+  value: number;
+  currency: Currency;
 }
 
 export interface Address {
@@ -155,6 +314,8 @@ export interface Address {
   lng: number;
   formattedAddress: string;
   iso2: string;
+
+  // here we can put address extra information
   info?: string;
 }
 
@@ -172,26 +333,15 @@ export interface Phone {
   iso2: string;
 }
 
-export interface Phone {
-  code: string;
-  number: string;
-  iso2: string;
-}
-
 export interface File {
   url: string
-}
-
-enum DeliveryOption {
-  Curbside,
-  White_glove,
 }
 
 export interface Item {
   description: string;
   packing: Packing;
   commercialValue: Price;
-  dimensions: Details[];
+  dimensions: Dimension[];
   quantity: number;
 }
 
@@ -200,21 +350,31 @@ enum Packing {
   NOT_PACKED
 }
 
-export interface Details {
-  length: number;
-  height: number;
-  width: number;
-  quantity: number;
+export interface Dimension {
+  length: Length;
+  height: Length;
+  width: Length;
+  quantity: Length;
   weight: Weight;
   description: string;
 }
 
-enum WeightMetric {
-  KG,
-  LB
+export interface Length {
+  value: number;
+  unit: LengthMetric;
+}
+
+export enum LengthMetric {
+  CM,
+  INCH
 }
 
 export interface Weight {
   value: number;
   unit: WeightMetric;
+}
+
+export enum WeightMetric {
+  KG,
+  LB
 }
