@@ -185,9 +185,6 @@ export interface Booking {
     delivery?: DeliveryOption 
   }
 
-  // can be opsio contact
-  // but potentially any king of authority for that booking
-
   /**
    * REFERRER
    * Read only !!
